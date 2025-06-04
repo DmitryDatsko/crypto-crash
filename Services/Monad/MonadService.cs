@@ -27,6 +27,7 @@ public class MonadService : IMonadService
         _web3OwnerKey = new(account, _env.RpcUrl);
         
         _mempoolTimeSec = TimeSpan.FromSeconds(_env.MempoolTimeSec);
+        _requiredConfirmations = _env.RequiredConfirmations;
     }
     private async Task<bool> OnConnected() => await _web3.Net.Version.SendRequestAsync() == _env.NetworkId;
     

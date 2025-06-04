@@ -7,5 +7,5 @@ namespace CryptoCrush.Models.Contract;
 public class AddWinnersBalanceFunction : FunctionMessage
 {
     [Parameter("tuple[]", "banch",1)]
-    public List<User> Banch { get; set; }
+    public List<User>? Banch { get; set; }
 }

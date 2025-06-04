@@ -1,24 +1,50 @@
 ﻿namespace CryptoCrush.Configuration;
 public class EnvVariables
 {
-    [ConfigurationKeyName("RPC_URL")]
-    public string RpcUrl { get; init; } = string.Empty;
-    [ConfigurationKeyName("CONTRACT_OWNER_PRIVATE_KEY")]
-    public string ContractOwnerPrivateKey { get; init; } = string.Empty;
-    [ConfigurationKeyName("NETWORK_ID")]
-    public string NetworkId { get; init; } = string.Empty;
-    [ConfigurationKeyName("CONTRACT_ADDRESS")]
-    public string ContractAddress { get; init; } = string.Empty;
-    [ConfigurationKeyName("JWT_TOKEN_SECRET")]
-    public string JwtTokenSecret { get; init; } = string.Empty;
-    [ConfigurationKeyName("POSTGRES_CONNECTION_STRING")]
-    public string PostgresConnectionString { get; init; } = string.Empty;
-    public string CookieName { get; init; } = string.Empty;
-    public double MempoolTimeSec { get; init; }
-    public int RequiredConfirmations { get; init; }
-    public decimal TotalPixels { get; init; }
-    public decimal Margin { get; init; }
-    public double GameDuration { get; init; }
-    public double BetTime { get; init; }
-    public double DelayAfterGame { get; init; }
+    public string RpcUrl { get; set; } = string.Empty;
+    public string ContractOwnerPrivateKey { get; set; } = string.Empty;
+    public string NetworkId { get; set; } = string.Empty;
+    public string ContractAddress { get; set; } = string.Empty;
+    public string JwtTokenSecret { get; set; } = string.Empty;
+    public string PostgresConnectionString { get; set; } = string.Empty;
+    public string CookieName { get; set; } = string.Empty;
+    public double MempoolTimeSec { get; set; }
+    public int RequiredConfirmations { get; set; }
+    public decimal TotalPixels { get; set; }
+    public decimal Margin { get; set; }
+    public double GameDuration { get; set; }
+    public double BetTime { get; set; }
+    public double DelayAfterGame { get; set; }
+
+    public static string ToEnvVariables(string pascalName)
+    {
+        var sb = new System.Text.StringBuilder();
+        for (int i = 0; i < pascalName.Length; i++)
+        {
+            char c = pascalName[i];
+            if (i > 0 && char.IsUpper(c))
+            {
+                sb.Append('_');
+            }
+            sb.Append(char.ToUpperInvariant(c));
+        }
+        
+        return sb.ToString();
+    }
+    
+    public static string ToDockerVariables(string pascalName)
+    {
+        var sb = new System.Text.StringBuilder();
+        for (int i = 0; i < pascalName.Length; i++)
+        {
+            char c = pascalName[i];
+            if (i > 0 && char.IsUpper(c))
+            {
+                sb.Append('_');
+            }
+            sb.Append(char.ToLowerInvariant(c));
+        }
+        
+        return sb.ToString();
+    }
 }

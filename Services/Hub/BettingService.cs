@@ -55,7 +55,7 @@ public class BettingService : BackgroundService
 
         _pixels[PixelKey.LongX] = 0m;
         _pixels[PixelKey.ShortX] = 0m;
-
+        
         _totalPixels = envValue.TotalPixels;
         _margin = envValue.Margin;
         _gameDuration = TimeSpan.FromSeconds(envValue.GameDuration);

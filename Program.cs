@@ -9,30 +9,87 @@ using CryptoCrush.Services.Hub;
 using CryptoCrush.Services.Monad;
 using CryptoCrush.Services.Token;
 using DotNetEnv;
+using Mcrio.Configuration.Provider.Docker.Secrets;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.CookiePolicy;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var myAllowSpecificOrigins = "_myAllowSpecificOrigins";
+string connectionString, cookieName, jwtSecret;
+
+builder.Configuration
+    .SetBasePath(builder.Environment.ContentRootPath)
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddEnvironmentVariables();
 
 if (builder.Environment.IsDevelopment())
 {
     Env.Load();
+    builder.Configuration.AddEnvironmentVariables();
+    connectionString = Environment.GetEnvironmentVariable(EnvVariables
+        .ToEnvVariables(nameof(EnvVariables.PostgresConnectionString))) ?? string.Empty;
+    cookieName = Environment.GetEnvironmentVariable(nameof(EnvVariables.CookieName)) ?? string.Empty;
+    jwtSecret = Environment.GetEnvironmentVariable(EnvVariables
+        .ToEnvVariables(nameof(EnvVariables.JwtTokenSecret))) ?? string.Empty;
 }
-builder.Configuration
-    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-    .AddKeyPerFile("/run/secrets", optional: true, reloadOnChange: false)
-    .AddEnvironmentVariables();
-builder.Services.Configure<EnvVariables>(
-    builder.Configuration.GetSection("EnvVariables"));
+else
+{
+    builder.Configuration.AddEnvironmentVariables();
+    builder.Configuration.AddDockerSecrets();
+    connectionString = Environment.GetEnvironmentVariable(EnvVariables
+        .ToDockerVariables(nameof(EnvVariables.PostgresConnectionString))) ?? string.Empty;
+    cookieName = Environment.GetEnvironmentVariable(nameof(EnvVariables.CookieName)) ?? string.Empty;
+    jwtSecret = Environment.GetEnvironmentVariable(EnvVariables
+        .ToDockerVariables(nameof(EnvVariables.JwtTokenSecret))) ?? string.Empty;
+}
+
+builder.Services.Configure<EnvVariables>(options =>
+{
+    builder.Configuration.GetSection("EnvVariables").Bind(options);
+    
+    if (builder.Environment.IsDevelopment())
+    {
+        var toEnvVars = EnvVariables.ToEnvVariables;
+        
+        options.RpcUrl = Environment
+            .GetEnvironmentVariable(toEnvVars(nameof(EnvVariables.RpcUrl))) ?? string.Empty;
+        options.ContractOwnerPrivateKey = Environment
+            .GetEnvironmentVariable(toEnvVars(nameof(EnvVariables.ContractOwnerPrivateKey))) ?? string.Empty;
+        options.NetworkId = Environment
+            .GetEnvironmentVariable(toEnvVars(nameof(EnvVariables.NetworkId))) ?? string.Empty;
+        options.ContractAddress = Environment
+            .GetEnvironmentVariable(toEnvVars(nameof(EnvVariables.ContractAddress))) ?? string.Empty;
+        options.JwtTokenSecret = Environment
+            .GetEnvironmentVariable(toEnvVars(nameof(EnvVariables.JwtTokenSecret))) ?? string.Empty;
+        options.PostgresConnectionString = Environment
+            .GetEnvironmentVariable(toEnvVars(nameof(EnvVariables.PostgresConnectionString))) ?? string.Empty;
+    }
+    else
+    {
+        var toDockerVars = EnvVariables.ToDockerVariables;
+        
+        options.RpcUrl = Environment
+            .GetEnvironmentVariable(toDockerVars(nameof(EnvVariables.RpcUrl))) ?? string.Empty;
+        options.ContractOwnerPrivateKey = Environment
+            .GetEnvironmentVariable(toDockerVars(nameof(EnvVariables.ContractOwnerPrivateKey))) ?? string.Empty;
+        options.NetworkId = Environment
+            .GetEnvironmentVariable(toDockerVars(nameof(EnvVariables.NetworkId))) ?? string.Empty;
+        options.ContractAddress = Environment
+            .GetEnvironmentVariable(toDockerVars(nameof(EnvVariables.ContractAddress))) ?? string.Empty;
+        options.JwtTokenSecret = Environment
+            .GetEnvironmentVariable(toDockerVars(nameof(EnvVariables.JwtTokenSecret))) ?? string.Empty;
+        options.PostgresConnectionString = Environment
+            .GetEnvironmentVariable(toDockerVars(nameof(EnvVariables.PostgresConnectionString))) ?? string.Empty;
+    }
+});
 
 builder.Services.AddDbContextFactory<ApiDbContext>(opts =>
-    opts.UseNpgsql(Environment.GetEnvironmentVariable("ENVVARIABLES__POSTGRES_CONNECTION_STRING")));
+    opts.UseNpgsql(connectionString));
+
 builder.Services.AddSignalR()
     .AddHubOptions<GameHub>(opts => opts.AddFilter<HubAuthorize>());
 builder.Services.AddHttpContextAccessor();
@@ -79,8 +136,7 @@ builder.Services.AddAuthentication(options =>
         NameClaimType = JwtRegisteredClaimNames.Sub,
         IssuerSigningKey = new SymmetricSecurityKey(
             Encoding.ASCII.GetBytes(
-                Environment.GetEnvironmentVariable("ENVVARIABLES__JWT_TOKEN_SECRET")!
-            )
+                Environment.GetEnvironmentVariable(jwtSecret)!)
         )
     };
 
@@ -88,14 +144,14 @@ builder.Services.AddAuthentication(options =>
     {
         OnMessageReceived = context =>
         {
-            if (context.Request.Cookies.TryGetValue(Environment.GetEnvironmentVariable("CookieName")!, out var token))
+            if (context.Request.Cookies.TryGetValue(cookieName, out var token))
             {
                 context.Token = token;
             }
 
             if (string.IsNullOrEmpty(context.Token))
             {
-                context.Token = context.Request.Query[Environment.GetEnvironmentVariable("CookieName")!];
+                context.Token = context.Request.Query[cookieName];
             }
             
             return Task.CompletedTask;
@@ -104,7 +160,6 @@ builder.Services.AddAuthentication(options =>
 });
 
 var app = builder.Build();
-Console.Write(Environment.GetEnvironmentVariable("ENVVARIABLES__POSTGRES_CONNECTION_STRING"));
 SeedDatabase();
 
 app.UseCors(myAllowSpecificOrigins);
@@ -124,7 +179,6 @@ app.MapHub<GameHub>("/gamehub");
 app.UseHttpsRedirection();
 
 app.Run();
-
 void SeedDatabase()
 {
     using var scope = app.Services.CreateScope();

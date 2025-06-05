@@ -158,7 +158,7 @@ builder.Services.AddAuthentication(options =>
 });
 
 var app = builder.Build();
-//SeedDatabase();
+SeedDatabase();
 
 app.UseCors(myAllowSpecificOrigins);
 

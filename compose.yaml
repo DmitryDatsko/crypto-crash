@@ -47,6 +47,7 @@
       - ../nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       - backend
+      - frontend
     secrets:
       - ssl_dhparams
       - ssl_fullchain
@@ -59,6 +60,21 @@
         condition: on-failure
         delay: 10s
         max_attempts: 5
+
+
+  frontend:
+    image: my-next-app:latest
+    restart: always
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    environment:
+      - NODE_ENV=production
+    ports:
+      - "3000:3000"
+    networks:
+      - backend_net
 
 secrets:
   db_password:

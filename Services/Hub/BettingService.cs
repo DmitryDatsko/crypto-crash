@@ -10,6 +10,7 @@ using CryptoCrush.Services.Monad;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Nethereum.Util;
 
 namespace CryptoCrush.Services.Hub;
 
@@ -162,7 +163,7 @@ public class BettingService : BackgroundService
                 await _hub.Clients.All.SendAsync(methodName, elapsed, cancellationToken: cancellationToken);
             }
 
-            await Task.Delay(50, cancellationToken);
+            await Task.Delay(200, cancellationToken);
         }
 
         await _hub.Clients.All.SendAsync(methodName, totalSeconds, cancellationToken: cancellationToken);
@@ -303,7 +304,7 @@ public class BettingService : BackgroundService
 
                 await _hub.Clients.All.SendAsync(HubMethods.GameResult, new
                 {
-                    gameResult,
+                    gameResult = newGame.WinningSide,
                     state.IsBettingOpen,
                     state.IsGameStarted,
                     bets

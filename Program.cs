@@ -124,7 +124,7 @@ builder.Services.AddAuthentication(options =>
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 }).AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
 {
-    //options.RequireHttpsMetadata = true;
+    options.RequireHttpsMetadata = true;
     options.SaveToken = true;
     options.TokenValidationParameters = new()
     {
@@ -166,8 +166,7 @@ app.UseCookiePolicy(new CookiePolicyOptions
 {
     MinimumSameSitePolicy = SameSiteMode.None,
     HttpOnly = HttpOnlyPolicy.Always,
-    //Secure = CookieSecurePolicy.Always
-    Secure = CookieSecurePolicy.SameAsRequest
+    Secure = CookieSecurePolicy.Always
 });
 
 app.UseAuthentication();

@@ -4,21 +4,30 @@ using Microsoft.Extensions.Options;
 
 namespace CryptoCrush.Services.Token;
 
-public class UserIdentity(IHttpContextAccessor accessor, IOptions<EnvVariables> env) : IUserIdentity
+public class UserIdentity : IUserIdentity
 {
-    private readonly EnvVariables _env = env.Value;
+    private readonly IHttpContextAccessor _accessor;
+    private readonly EnvVariables _envVariables;
+
+    public UserIdentity(IHttpContextAccessor accessor, IOptions<EnvVariables> envVariables)
+    {
+        _accessor = accessor;
+        _envVariables = envVariables.Value;
+    }
+
     private bool HasWalletCookie()
     {
-        var cookies = accessor.HttpContext?.Request.Cookies;
-        
-        return cookies != null && cookies.ContainsKey(_env.CookieName);
+        var cookies = _accessor.HttpContext?.Request.Cookies;
+        return cookies != null && cookies.ContainsKey(_envVariables.CookieName);
     }
+
     public string GetAddressByCookie()
     {
-        if(!HasWalletCookie()) return string.Empty;
-        
-        var cookies = accessor.HttpContext?.Request.Cookies;
-        if (cookies == null || !cookies.TryGetValue(_env.CookieName, out var token))
+        if (!HasWalletCookie()) 
+            return string.Empty;
+
+        var cookies = _accessor.HttpContext!.Request.Cookies;
+        if (!cookies.TryGetValue(_envVariables.CookieName, out var token))
             return string.Empty;
 
         try
@@ -33,3 +42,5 @@ public class UserIdentity(IHttpContextAccessor accessor, IOptions<EnvVariables> 
         }
     }
 }
+
+

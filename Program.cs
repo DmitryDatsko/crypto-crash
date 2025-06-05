@@ -96,7 +96,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<BettingService>();
 builder.Services.AddSingleton<HubAuthorize>();
 builder.Services.AddSingleton<CryptoPriceService>();
-builder.Services.AddSingleton<IUserIdentity, UserIdentity>();
+builder.Services.AddScoped<IUserIdentity, UserIdentity>();
 builder.Services.AddSingleton<IMonadService, MonadService>();
 builder.Services.AddScoped<IDbInitializer, DbInitializer>();
 builder.Services.AddHostedService(provider => provider.GetRequiredService<CryptoPriceService>());

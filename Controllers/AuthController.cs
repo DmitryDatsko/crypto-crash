@@ -51,9 +51,7 @@ public class AuthController(
     {
         var address = userIdentity.GetAddressByCookie(HttpContext);
         
-        return string.IsNullOrEmpty(address) 
-            ? Unauthorized() 
-            : Ok(new { address });
+        return Ok(new { address });
     }
 
     [Authorize]

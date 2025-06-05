@@ -21,7 +21,6 @@
       - "5001:8081"
     networks:
       - backend_net
-
         
   crypto_crush_db:
     image: postgres
@@ -55,6 +54,11 @@
       - ssl_privkey
     networks:
       - backend_net
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 5
 
 secrets:
   db_password:

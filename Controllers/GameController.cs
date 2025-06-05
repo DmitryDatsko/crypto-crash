@@ -15,7 +15,11 @@ public class GameController(ApiDbContext db) : ControllerBase
             .OrderByDescending(g => g.PlayedAt)
             .AsNoTracking()
             .Take(pageSize)
-            .Select(g => g.WinningSide)
+            .Select(g => new
+            {
+                g.Id,
+                g.WinningSide,
+            })
             .ToListAsync();
 
         return Ok(new { Items = items });

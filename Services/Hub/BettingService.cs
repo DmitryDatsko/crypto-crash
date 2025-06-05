@@ -151,18 +151,25 @@ public class BettingService : BackgroundService
         const double eps = 0.005;
         double lastSentTime = -1;
 
-        using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(200));
+        using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(10));
+        
+        stopwatch.Start();
         
         try
         {
             while (await timer.WaitForNextTickAsync(cancellationToken) 
                    && stopwatch.Elapsed.TotalSeconds < totalSeconds)
             {
-                double elapsed = Math.Round(stopwatch.Elapsed.TotalSeconds, 2);
-                if (Math.Abs(elapsed - lastSentTime) > eps)
+                double rawElapsed = stopwatch.Elapsed.TotalSeconds;
+                
+                double rounded = Math.Round(rawElapsed, 2);
+
+                if (Math.Abs(rounded - lastSentTime) > eps)
                 {
-                    lastSentTime = elapsed;
-                    await _hub.Clients.All.SendAsync(methodName, elapsed, cancellationToken: cancellationToken);
+                    lastSentTime = rounded;
+                    
+                    await _hub.Clients.All
+                        .SendAsync(methodName, rounded, cancellationToken: cancellationToken);
                 }
             }
         }
@@ -171,7 +178,8 @@ public class BettingService : BackgroundService
             
         }
 
-        await _hub.Clients.All.SendAsync(methodName, totalSeconds, cancellationToken: cancellationToken);
+        await _hub.Clients.All
+            .SendAsync(methodName, Math.Round(totalSeconds, 2), cancellationToken: cancellationToken);
     }
     
     private void HandlePriceChanged(object? sender, decimal newPrice)

@@ -98,7 +98,8 @@ public class AuthController(
             new CookieOptions
             {
                 Path = "/",
-                Secure = true,
+                //Secure = true,
+                Secure = false,
                 HttpOnly = true,
                 SameSite = SameSiteMode.None,
                 Expires = DateTime.UtcNow.AddDays(1)
@@ -109,7 +110,8 @@ public class AuthController(
         httpContext.Response.Cookies.Delete(_env.CookieName, new CookieOptions
         {
             Path = "/",
-            Secure = true,
+            //Secure = true,
+            Secure = false,
             HttpOnly = true,
             SameSite = SameSiteMode.None,
             Expires = DateTimeOffset.UnixEpoch

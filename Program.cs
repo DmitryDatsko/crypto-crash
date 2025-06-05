@@ -45,8 +45,6 @@ else
     cookieName = Environment.GetEnvironmentVariable(nameof(EnvVariables.CookieName)) ?? string.Empty;
     jwtSecret = 
         builder.Configuration[EnvVariables.ToDockerVariables(nameof(EnvVariables.JwtTokenSecret))] ?? string.Empty;
-    Console.WriteLine($"connectionString: {builder.Configuration["postgres_connection_string"]}");
-    //connectionString = "Host=crypto_crush_db;Port=5432;Database=crypto_crush;Username=postgres;Password=cxY8jGQvLXVCsfhD";
 }
 
 builder.Services.Configure<EnvVariables>(options =>
@@ -137,10 +135,8 @@ builder.Services.AddAuthentication(options =>
         ClockSkew = TimeSpan.Zero,
         NameClaimType = JwtRegisteredClaimNames.Sub,
         IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.ASCII.GetBytes(
-                Environment.GetEnvironmentVariable(jwtSecret)!)
-        )
-    };
+            Encoding.ASCII.GetBytes(jwtSecret)
+	};
 
     options.Events = new JwtBearerEvents
     {
@@ -162,7 +158,7 @@ builder.Services.AddAuthentication(options =>
 });
 
 var app = builder.Build();
-SeedDatabase();
+//SeedDatabase();
 
 app.UseCors(myAllowSpecificOrigins);
 

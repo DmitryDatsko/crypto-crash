@@ -49,7 +49,7 @@ public class AuthController(
     [HttpGet("me")]
     public IActionResult Me()
     {
-        var address = userIdentity.GetAddressByCookie();
+        var address = userIdentity.GetAddressByCookie(HttpContext);
         
         return string.IsNullOrEmpty(address) 
             ? Unauthorized() 

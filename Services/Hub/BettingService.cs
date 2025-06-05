@@ -151,7 +151,7 @@ public class BettingService : BackgroundService
         const double eps = 0.005;
         double lastSentTime = -1;
 
-        using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(10));
+        using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(50));
         
         stopwatch.Start();
         

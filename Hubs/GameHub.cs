@@ -47,7 +47,7 @@ public sealed class GameHub(
         }
 
         await using var db = await dbContextFactory.CreateDbContextAsync();
-        var userAddress = userIdentity.GetAddressByCookie();
+        var userAddress = userIdentity.GetAddressByCookie(Context.GetHttpContext()!);
         bool isBetPlaced = await db.Bets
             .AsNoTracking()
             .AnyAsync(b =>

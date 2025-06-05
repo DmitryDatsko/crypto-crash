@@ -2,5 +2,5 @@
 
 public interface IUserIdentity
 {
-    string GetAddressByCookie();
+    string GetAddressByCookie(HttpContext context);
 }

@@ -4,35 +4,20 @@ using Microsoft.Extensions.Options;
 
 namespace CryptoCrush.Services.Token;
 
-public class UserIdentity : IUserIdentity
+public class UserIdentity(IOptions<EnvVariables> env) : IUserIdentity
 {
-    private readonly IHttpContextAccessor _accessor;
-    private readonly EnvVariables _envVariables;
-
-    public UserIdentity(IHttpContextAccessor accessor, IOptions<EnvVariables> envVariables)
+    private readonly EnvVariables _env = env.Value;
+    public string GetAddressByCookie(HttpContext context)
     {
-        _accessor = accessor;
-        _envVariables = envVariables.Value;
-    }
+        var cookie = context.Request.Cookies;
 
-    private bool HasWalletCookie()
-    {
-        var cookies = _accessor.HttpContext?.Request.Cookies;
-        return cookies != null && cookies.ContainsKey(_envVariables.CookieName);
-    }
-
-    public string GetAddressByCookie()
-    {
-        if (!HasWalletCookie()) 
-            return string.Empty;
-
-        var cookies = _accessor.HttpContext!.Request.Cookies;
-        if (!cookies.TryGetValue(_envVariables.CookieName, out var token))
+        if (!cookie.TryGetValue(_env.CookieName, out var address))
             return string.Empty;
 
         try
         {
-            var jwt = new JwtSecurityTokenHandler().ReadJwtToken(token);
+            var jwt = new JwtSecurityTokenHandler().ReadJwtToken(address);
+
             return jwt.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value
                    ?? string.Empty;
         }
@@ -42,5 +27,3 @@ public class UserIdentity : IUserIdentity
         }
     }
 }
-
-

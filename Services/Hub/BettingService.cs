@@ -151,19 +151,24 @@ public class BettingService : BackgroundService
         const double eps = 0.005;
         double lastSentTime = -1;
 
-        while (stopwatch.Elapsed.TotalSeconds < totalSeconds)
+        using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(200));
+        
+        try
         {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            double elapsed = Math.Round(stopwatch.Elapsed.TotalSeconds, 2);
-
-            if (Math.Abs(elapsed - lastSentTime) > eps)
+            while (await timer.WaitForNextTickAsync(cancellationToken) 
+                   && stopwatch.Elapsed.TotalSeconds < totalSeconds)
             {
-                lastSentTime = elapsed;
-                await _hub.Clients.All.SendAsync(methodName, elapsed, cancellationToken: cancellationToken);
+                double elapsed = Math.Round(stopwatch.Elapsed.TotalSeconds, 2);
+                if (Math.Abs(elapsed - lastSentTime) > eps)
+                {
+                    lastSentTime = elapsed;
+                    await _hub.Clients.All.SendAsync(methodName, elapsed, cancellationToken: cancellationToken);
+                }
             }
-
-            await Task.Delay(200, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            
         }
 
         await _hub.Clients.All.SendAsync(methodName, totalSeconds, cancellationToken: cancellationToken);

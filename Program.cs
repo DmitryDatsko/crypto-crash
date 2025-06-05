@@ -45,6 +45,8 @@ else
     cookieName = Environment.GetEnvironmentVariable(nameof(EnvVariables.CookieName)) ?? string.Empty;
     jwtSecret = Environment.GetEnvironmentVariable(EnvVariables
         .ToDockerVariables(nameof(EnvVariables.JwtTokenSecret))) ?? string.Empty;
+    Console.WriteLine($"connectionString: {builder.Configuration["postgres_connection_string"]}");
+    connectionString = "Host=crypto_crush_db;Port=5432;atabase=crypto_crush;Username=postgres;Password=cxY8jGQvLXVCsfhD";
 }
 
 builder.Services.Configure<EnvVariables>(options =>

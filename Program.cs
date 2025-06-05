@@ -167,7 +167,7 @@ app.UseCookiePolicy(new CookiePolicyOptions
     MinimumSameSitePolicy = SameSiteMode.None,
     HttpOnly = HttpOnlyPolicy.Always,
     //Secure = CookieSecurePolicy.Always
-    Secure = CookieSecurePolicy.None
+    Secure = CookieSecurePolicy.SameAsRequest
 });
 
 app.UseAuthentication();

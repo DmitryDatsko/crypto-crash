@@ -99,7 +99,6 @@ public class AuthController(
             {
                 Path = "/",
                 //Secure = true,
-                Secure = false,
                 HttpOnly = true,
                 SameSite = SameSiteMode.None,
                 Expires = DateTime.UtcNow.AddDays(1)
@@ -111,7 +110,6 @@ public class AuthController(
         {
             Path = "/",
             //Secure = true,
-            Secure = false,
             HttpOnly = true,
             SameSite = SameSiteMode.None,
             Expires = DateTimeOffset.UnixEpoch

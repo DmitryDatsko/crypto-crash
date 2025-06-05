@@ -40,13 +40,13 @@ else
 {
     builder.Configuration.AddEnvironmentVariables();
     builder.Configuration.AddDockerSecrets();
-    connectionString = Environment.GetEnvironmentVariable(EnvVariables
-        .ToDockerVariables(nameof(EnvVariables.PostgresConnectionString))) ?? string.Empty;
+    connectionString = 
+        builder.Configuration[EnvVariables.ToDockerVariables(nameof(EnvVariables.PostgresConnectionString))] ?? string.Empty;
     cookieName = Environment.GetEnvironmentVariable(nameof(EnvVariables.CookieName)) ?? string.Empty;
-    jwtSecret = Environment.GetEnvironmentVariable(EnvVariables
-        .ToDockerVariables(nameof(EnvVariables.JwtTokenSecret))) ?? string.Empty;
+    jwtSecret = 
+        builder.Configuration[EnvVariables.ToDockerVariables(nameof(EnvVariables.JwtTokenSecret))] ?? string.Empty;
     Console.WriteLine($"connectionString: {builder.Configuration["postgres_connection_string"]}");
-    connectionString = "Host=crypto_crush_db;Port=5432;atabase=crypto_crush;Username=postgres;Password=cxY8jGQvLXVCsfhD";
+    //connectionString = "Host=crypto_crush_db;Port=5432;Database=crypto_crush;Username=postgres;Password=cxY8jGQvLXVCsfhD";
 }
 
 builder.Services.Configure<EnvVariables>(options =>
@@ -74,18 +74,18 @@ builder.Services.Configure<EnvVariables>(options =>
     {
         var toDockerVars = EnvVariables.ToDockerVariables;
         
-        options.RpcUrl = Environment
-            .GetEnvironmentVariable(toDockerVars(nameof(EnvVariables.RpcUrl))) ?? string.Empty;
-        options.ContractOwnerPrivateKey = Environment
-            .GetEnvironmentVariable(toDockerVars(nameof(EnvVariables.ContractOwnerPrivateKey))) ?? string.Empty;
-        options.NetworkId = Environment
-            .GetEnvironmentVariable(toDockerVars(nameof(EnvVariables.NetworkId))) ?? string.Empty;
-        options.ContractAddress = Environment
-            .GetEnvironmentVariable(toDockerVars(nameof(EnvVariables.ContractAddress))) ?? string.Empty;
-        options.JwtTokenSecret = Environment
-            .GetEnvironmentVariable(toDockerVars(nameof(EnvVariables.JwtTokenSecret))) ?? string.Empty;
-        options.PostgresConnectionString = Environment
-            .GetEnvironmentVariable(toDockerVars(nameof(EnvVariables.PostgresConnectionString))) ?? string.Empty;
+        options.RpcUrl = 
+            builder.Configuration[toDockerVars(nameof(EnvVariables.RpcUrl))] ?? string.Empty;
+        options.ContractOwnerPrivateKey = 
+            builder.Configuration[toDockerVars(nameof(EnvVariables.ContractOwnerPrivateKey))] ?? string.Empty;
+        options.NetworkId = 
+            builder.Configuration[toDockerVars(nameof(EnvVariables.NetworkId))] ?? string.Empty;
+        options.ContractAddress = 
+            builder.Configuration[toDockerVars(nameof(EnvVariables.ContractAddress))] ?? string.Empty;
+        options.JwtTokenSecret = 
+            builder.Configuration[toDockerVars(nameof(EnvVariables.JwtTokenSecret))] ?? string.Empty;
+        options.PostgresConnectionString = 
+            builder.Configuration[toDockerVars(nameof(EnvVariables.PostgresConnectionString))] ?? string.Empty;
     }
 });
 

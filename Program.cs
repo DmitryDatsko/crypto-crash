@@ -135,7 +135,7 @@ builder.Services.AddAuthentication(options =>
         ClockSkew = TimeSpan.Zero,
         NameClaimType = JwtRegisteredClaimNames.Sub,
         IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.ASCII.GetBytes(jwtSecret)
+            Encoding.ASCII.GetBytes(jwtSecret))
 	};
 
     options.Events = new JwtBearerEvents

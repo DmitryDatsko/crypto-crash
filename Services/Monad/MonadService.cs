@@ -37,8 +37,11 @@ public class MonadService : IMonadService
     public async Task<TransactionReceipt?> VerifyTransactionAsync(
         TransactionRequest request, CancellationToken cancellationToken = default)
     {
-        if(!await OnConnected())
+        if (!await OnConnected())
+        {
+            _logger.LogError("not connected");
             return null;
+        }
         
         var inMempool = await WaitForMempoolAsync(
             request.TransactionHash, cancellationToken);

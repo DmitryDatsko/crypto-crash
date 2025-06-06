@@ -54,7 +54,7 @@ public class AuthController(
         if (string.IsNullOrEmpty(address))
             return Unauthorized("Invalid or missing JWT cookie");
         
-        return Ok(new { WalletAddress = address });
+        return Ok(new { address });
     }
 
     [Authorize]

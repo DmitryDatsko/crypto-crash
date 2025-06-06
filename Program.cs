@@ -159,6 +159,7 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
+app.UseHttpsRedirection();
 SeedDatabase();
 
 app.UseCors(myAllowSpecificOrigins);
@@ -175,7 +176,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<GameHub>("/gamehub");
-app.UseHttpsRedirection();
+
 
 app.Run();
 void SeedDatabase()

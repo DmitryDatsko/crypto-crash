@@ -45,7 +45,7 @@ public class AuthController(
     [HttpGet("nonce")]
     public IActionResult Nonce() => Ok(GenerateSecureNonce());
     
-    //[Authorize]
+    [Authorize]
     [HttpGet("me")]
     public IActionResult Me()
     {

@@ -1,0 +1,108 @@
+﻿services:
+  backend:
+    image: crypto-crush:latest
+    restart: always
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    secrets:
+      - contract_address
+      - contract_owner_private_key
+      - jwt_token_secret
+      - postgres_connection_string
+      - rpc_url
+    environment:
+      - ASPNETCORE_URLS=http://+:8080
+    depends_on:
+      - crypto_crush_db
+    ports:
+      - "5000:8080"
+      - "5001:8081"
+    networks:
+      - backend_net
+        
+  crypto_crush_db:
+    image: postgres
+    restart: always
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      POSTGRES_DB: crypto_crush
+    volumes:
+      - pgdata_crypto_crush:/var/lib/postgresql/data
+    secrets:
+      - db_password
+    networks:
+      - backend_net
+  
+  nginx:
+    image: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ../nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - backend
+      - frontend
+    secrets:
+      - ssl_dhparams
+      - ssl_fullchain
+      - ssl_options
+      - ssl_privkey
+    networks:
+      - backend_net
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 5
+
+
+  frontend:
+    image: my-next-app:latest
+    restart: always
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    environment:
+      - NODE_ENV=production
+    ports:
+      - "3000:3000"
+    networks:
+      - backend_net
+
+secrets:
+  db_password:
+    external: true
+  postgres_connection_string:
+    external: true
+  contract_address:
+    external: true
+  contract_owner_private_key:
+    external: true
+  jwt_token_secret:
+    external: true
+  network_id:
+    external: true
+  rpc_url:
+    external: true
+  ssl_privkey:
+    external: true
+  ssl_options:
+    external: true
+  ssl_fullchain:
+    external: true
+  ssl_dhparams:
+    external: true
+
+volumes:
+  pgdata_crypto_crush:
+
+networks:
+  backend_net:
+    driver: overlay

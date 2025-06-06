@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
+using System.Text.Json.Serialization;
 using CryptoCrush.Configuration;
 using CryptoCrush.Data;
 using CryptoCrush.DbInitializer;
@@ -92,7 +93,12 @@ builder.Services.AddDbContextFactory<ApiDbContext>(opts =>
 
 builder.Services.AddControllers();
 builder.Services.AddSignalR()
-    .AddHubOptions<GameHub>(opts => opts.AddFilter<HubAuthorize>());
+    .AddHubOptions<GameHub>(opts => opts.AddFilter<HubAuthorize>())
+    .AddJsonProtocol(options =>
+    {
+        options.PayloadSerializerOptions.PropertyNameCaseInsensitive = true;
+        options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<BettingService>();
 builder.Services.AddSingleton<HubAuthorize>();

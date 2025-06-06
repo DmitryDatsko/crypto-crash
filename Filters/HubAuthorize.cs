@@ -15,6 +15,7 @@ public class HubAuthorize(
         HubInvocationContext invocationContext,
         Func<HubInvocationContext, ValueTask<object?>> next)
     {
+        logger.LogInformation("In filter");
         var httpContext = invocationContext.Context.GetHttpContext();
 
         if (invocationContext.HubMethodName == nameof(GameHub.PlaceBet))

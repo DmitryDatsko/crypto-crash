@@ -32,16 +32,16 @@ public class MonadService : IMonadService
         
         _logger = logger;
     }
-    private async Task<bool> OnConnected() => await _web3.Net.Version.SendRequestAsync() == _env.NetworkId;
+    //private async Task<bool> OnConnected() => await _web3.Net.Version.SendRequestAsync() == _env.NetworkId;
     
     public async Task<TransactionReceipt?> VerifyTransactionAsync(
         TransactionRequest request, CancellationToken cancellationToken = default)
     {
-        if (!await OnConnected())
+        /*if (!await OnConnected())
         {
             _logger.LogError("not connected");
             return null;
-        }
+        }*/
         
         var inMempool = await WaitForMempoolAsync(
             request.TransactionHash, cancellationToken);

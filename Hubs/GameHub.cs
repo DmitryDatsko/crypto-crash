@@ -14,6 +14,7 @@ public sealed class GameHub(
     BettingService bettingService,
     IMonadService monadService,
     IUserIdentity userIdentity,
+    ILogger<GameHub> logger,
     IDbContextFactory<ApiDbContext> dbContextFactory) : Hub
 {
     private readonly Dictionary<string, decimal> _bets = new();
@@ -34,6 +35,7 @@ public sealed class GameHub(
         
         if (gameId != gameState.GameId)
         {
+            logger.LogCritical("Invalid game id");
             await Clients.User(Context.UserIdentifier ?? string.Empty)
                 .SendAsync(HubMethods.BetRejected, "This game has already finished.");
             return;
@@ -41,6 +43,7 @@ public sealed class GameHub(
         
         if (side is not (BetSides.Long or BetSides.Short or BetSides.Tie))
         {
+            logger.LogCritical("Bad side");
             await Clients.User(Context.UserIdentifier ?? string.Empty)
                 .SendAsync(HubMethods.BetRejected, "Bets are closed now");
             return;
@@ -56,6 +59,7 @@ public sealed class GameHub(
         
         if (isBetPlaced)
         {
+            logger.LogCritical("Already placed");
             await Clients.User(Context.UserIdentifier ?? string.Empty).SendAsync(HubMethods.BetRejected, "Already placed");
             return;
         }
@@ -65,6 +69,7 @@ public sealed class GameHub(
         
         if (receipt == null)
         {
+            logger.LogCritical("Transaction not verified");
             await Clients.User(Context.UserIdentifier ?? string.Empty).SendAsync(HubMethods.BetRejected, "Transaction not verified");
             return;
         }

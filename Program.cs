@@ -134,7 +134,6 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = false,
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero,
-        NameClaimType = JwtRegisteredClaimNames.Sub,
         IssuerSigningKey = new SymmetricSecurityKey(
             Encoding.ASCII.GetBytes(jwtSecret))
 	};

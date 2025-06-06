@@ -15,10 +15,9 @@ public sealed class GameHub(
     IMonadService monadService,
     IUserIdentity userIdentity,
     ILogger<GameHub> logger,
-    IDbContextFactory<ApiDbContext> dbContextFactory) : Hub
+    IDbContextFactory<ApiDbContext> dbContextFactory,
+    HubBettingService hubBettingService) : Hub
 {
-    private readonly Dictionary<string, decimal> _bets = new();
-
     public override async Task OnConnectedAsync()
     {
         await Clients.Caller.SendAsync(HubMethods.OnConnected, bettingService.ReadState());
@@ -88,12 +87,12 @@ public sealed class GameHub(
         await Clients.User(Context.UserIdentifier ?? string.Empty)
             .SendAsync(HubMethods.BetAccepted);
         
-        _bets.Add(userAddress, amount);
+        hubBettingService.AddBet(userAddress, amount);
         
         await Clients.All.SendAsync(HubMethods.Bets, new
         {
-            bets = _bets,
-            bank = _bets.Sum(b => b.Value)
+            bets = hubBettingService.GetAllBets(),
+            bank = hubBettingService.GetBank()
         });
     }
 }

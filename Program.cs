@@ -106,6 +106,7 @@ builder.Services.AddSingleton<CryptoPriceService>();
 builder.Services.AddScoped<IUserIdentity, UserIdentity>();
 builder.Services.AddSingleton<IMonadService, MonadService>();
 builder.Services.AddScoped<IDbInitializer, DbInitializer>();
+builder.Services.AddSingleton<HubBettingService>();
 builder.Services.AddHostedService(provider => provider.GetRequiredService<CryptoPriceService>());
 builder.Services.AddHostedService(provider => provider.GetRequiredService<BettingService>());
 builder.Services.AddEndpointsApiExplorer();

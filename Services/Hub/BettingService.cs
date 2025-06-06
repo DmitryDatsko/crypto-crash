@@ -22,6 +22,7 @@ public class BettingService : BackgroundService
     private readonly IMonadService _monadService;
     private readonly CryptoPriceService _cryptoPriceService;
     private readonly ILogger<BettingService> _logger;
+    private readonly HubBettingService _hubBettingService;
     private readonly object _lock = new();
     
     private readonly decimal _totalPixels;
@@ -46,7 +47,8 @@ public class BettingService : BackgroundService
         IDbContextFactory<ApiDbContext> dbContextFactory,
         IMonadService monadService,
         IOptions<EnvVariables> env,
-        ILogger<BettingService> logger)
+        ILogger<BettingService> logger,
+        HubBettingService hubBettingService)
     {
         var envValue = env.Value;
         _hub = hub;
@@ -54,6 +56,7 @@ public class BettingService : BackgroundService
         _dbContextFactory = dbContextFactory;
         _monadService = monadService;
         _logger = logger;
+        _hubBettingService = hubBettingService;
 
         _pixels[PixelKey.LongX] = 0m;
         _pixels[PixelKey.ShortX] = 0m;
@@ -343,6 +346,7 @@ public class BettingService : BackgroundService
                 ClearPixelsDictionary();
                 _prices.Clear();
                 _payouts.Clear();
+                _hubBettingService.ClearBets();
                 await Task.Delay(_delayAfterGame, stoppingToken);
             }
         }

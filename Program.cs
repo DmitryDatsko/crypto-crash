@@ -125,11 +125,11 @@ builder.Services.AddAuthentication(options =>
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 }).AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
 {
-    //options.RequireHttpsMetadata = true;
+    options.RequireHttpsMetadata = true;
     options.SaveToken = true;
     options.TokenValidationParameters = new()
     {
-        ValidateIssuerSigningKey = false,
+        ValidateIssuerSigningKey = true,
         ValidateIssuer = false,
         ValidateAudience = false,
         ValidateLifetime = true,

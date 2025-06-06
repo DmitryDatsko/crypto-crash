@@ -17,8 +17,9 @@ public class MonadService : IMonadService
     private readonly Web3 _web3OwnerKey;
     private readonly int _requiredConfirmations;
     private readonly TimeSpan _mempoolTimeSec;
+    private readonly ILogger<MonadService> _logger;
 
-    public MonadService(IOptions<EnvVariables> env)
+    public MonadService(IOptions<EnvVariables> env, ILogger<MonadService> logger)
     {
         _env = env.Value;
         _web3 = new(_env.RpcUrl);
@@ -28,6 +29,8 @@ public class MonadService : IMonadService
         
         _mempoolTimeSec = TimeSpan.FromSeconds(_env.MempoolTimeSec);
         _requiredConfirmations = _env.RequiredConfirmations;
+        
+        _logger = logger;
     }
     private async Task<bool> OnConnected() => await _web3.Net.Version.SendRequestAsync() == _env.NetworkId;
     
@@ -39,16 +42,22 @@ public class MonadService : IMonadService
         
         var inMempool = await WaitForMempoolAsync(
             request.TransactionHash, cancellationToken);
-        
-        if(!inMempool)
+
+        if (!inMempool)
+        {
+            _logger.LogError("not in mempool");
             return null;
+        }
         
         var receipt = await _web3.Eth.Transactions
             .GetTransactionReceipt.SendRequestAsync(request.TransactionHash);
         
         if(!(string.Equals(receipt.From, request.AddressFrom, StringComparison.OrdinalIgnoreCase)
            && string.Equals(receipt.To, _env.ContractAddress, StringComparison.OrdinalIgnoreCase)))
+        {
+            _logger.LogError("bad from/to address");
             return null;
+        }
 
         var createdBlock = receipt.BlockNumber.Value;
         var latestBlock = (await _web3.Eth.Blocks.GetBlockNumber
@@ -87,7 +96,10 @@ public class MonadService : IMonadService
                     cancellationToken);
 
             if (receipt.Status.Value == 0)
+            {
+                _logger.LogError("bad winners balance");
                 return;
+            }
         }
     }
     

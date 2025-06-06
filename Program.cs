@@ -90,6 +90,7 @@ builder.Services.Configure<EnvVariables>(options =>
 builder.Services.AddDbContextFactory<ApiDbContext>(opts =>
     opts.UseNpgsql(connectionString));
 
+builder.Services.AddControllers();
 builder.Services.AddSignalR()
     .AddHubOptions<GameHub>(opts => opts.AddFilter<HubAuthorize>());
 builder.Services.AddHttpContextAccessor();
@@ -103,7 +104,7 @@ builder.Services.AddHostedService(provider => provider.GetRequiredService<Crypto
 builder.Services.AddHostedService(provider => provider.GetRequiredService<BettingService>());
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddControllers();
+
 
 builder.Services.AddCors(options =>
 {
@@ -124,7 +125,7 @@ builder.Services.AddAuthentication(options =>
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 }).AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
 {
-    options.RequireHttpsMetadata = true;
+    //options.RequireHttpsMetadata = true;
     options.SaveToken = true;
     options.TokenValidationParameters = new()
     {
@@ -170,6 +171,7 @@ app.UseCookiePolicy(new CookiePolicyOptions
     HttpOnly = HttpOnlyPolicy.Always,
     Secure = CookieSecurePolicy.Always
 });
+app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();

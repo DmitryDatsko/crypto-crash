@@ -51,7 +51,10 @@ public class AuthController(
     {
         var address = userIdentity.GetAddressByCookie(HttpContext);
         
-        return Ok(new { address });
+        if (string.IsNullOrEmpty(address))
+            return Unauthorized("Invalid or missing JWT cookie");
+        
+        return Ok(new { WalletAddress = address });
     }
 
     [Authorize]
@@ -98,6 +101,7 @@ public class AuthController(
                 Path = "/",
                 Secure = true,
                 HttpOnly = true,
+                Domain = "crypto-crush-api.duckdns.org",
                 SameSite = SameSiteMode.None,
                 Expires = DateTime.UtcNow.AddDays(1)
             });
@@ -107,6 +111,7 @@ public class AuthController(
         httpContext.Response.Cookies.Delete(_env.CookieName, new CookieOptions
         {
             Path = "/",
+            Domain = "crypto-crush-api.duckdns.org",
             Secure = true,
             HttpOnly = true,
             SameSite = SameSiteMode.None,

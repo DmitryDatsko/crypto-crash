@@ -6,7 +6,8 @@ using Microsoft.Extensions.Options;
 namespace CryptoCrush.Filters;
 
 public class HubAuthorize(
-    IOptions<EnvVariables> env) : IHubFilter
+    IOptions<EnvVariables> env,
+    ILogger<HubAuthorize> logger) : IHubFilter
 {
     private readonly EnvVariables _env = env.Value;
 
@@ -21,6 +22,7 @@ public class HubAuthorize(
             if (httpContext == null
                 || !httpContext.Request.Cookies.ContainsKey(_env.CookieName))
             {
+                logger.LogCritical("Invalid cookie");
                 await invocationContext.Hub.Clients.Caller
                     .SendAsync(HubMethods.BetRejected, "Invalid cookie");
             

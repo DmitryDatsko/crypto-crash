@@ -111,7 +111,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: myAllowSpecificOrigins,
         policyBuilder =>
         {
-            policyBuilder.WithOrigins("http://localhost:3000")
+            policyBuilder.WithOrigins("https://crypto-crush-api.duckdns.org")
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials();

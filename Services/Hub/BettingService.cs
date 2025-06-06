@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Globalization;
 using CryptoCrush.Configuration;
 using CryptoCrush.Data;
 using CryptoCrush.Enums;
@@ -151,7 +152,7 @@ public class BettingService : BackgroundService
         const double eps = 0.005;
         double lastSentTime = -1;
 
-        using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(100));
+        using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(70));
         
         stopwatch.Start();
         
@@ -168,8 +169,10 @@ public class BettingService : BackgroundService
                 {
                     lastSentTime = rounded;
                     
+                    string formatted = rounded.ToString("F2", CultureInfo.InvariantCulture);
+                    
                     await _hub.Clients.All
-                        .SendAsync(methodName, rounded, cancellationToken: cancellationToken);
+                        .SendAsync(methodName, formatted, cancellationToken: cancellationToken);
                 }
             }
         }
@@ -177,9 +180,11 @@ public class BettingService : BackgroundService
         {
             
         }
-
+        string finalFormatted = Math.Round(totalSeconds, 2)
+            .ToString("F2", CultureInfo.InvariantCulture);
+        
         await _hub.Clients.All
-            .SendAsync(methodName, Math.Round(totalSeconds, 2), cancellationToken: cancellationToken);
+            .SendAsync(methodName, finalFormatted, cancellationToken: cancellationToken);
     }
     
     private void HandlePriceChanged(object? sender, decimal newPrice)

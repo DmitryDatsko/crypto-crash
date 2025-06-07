@@ -28,6 +28,21 @@ builder.Configuration
     .AddDotNetEnv()
     .AddDockerSecrets();
 
+builder.Services.Configure<EnvVariables>(options =>
+{
+    builder.Configuration
+        .GetSection(nameof(EnvVariables))
+        .Bind(options);
+
+    foreach (var prop in typeof(EnvVariables).GetProperties())
+    {
+        var secretKey = EnvVariables.ToDockerVariables(prop.Name);
+        var secretVal = builder.Configuration[secretKey];
+        if (!string.IsNullOrWhiteSpace(secretVal))
+            prop.SetValue(options, Convert.ChangeType(secretVal, prop.PropertyType));
+    }
+});
+
 var envSection = builder.Configuration.GetSection(nameof(EnvVariables));
 
 var connectionString = envSection.GetValue<string>(
@@ -44,21 +59,6 @@ var jwtSecret = envSection.GetValue<string>(
 
 if (cookieName != "VerifyAddress")
     Console.WriteLine($"Invalid cookie name: {cookieName}");
-
-builder.Services.Configure<EnvVariables>(options =>
-{
-    builder.Configuration
-        .GetSection(nameof(EnvVariables))
-        .Bind(options);
-
-    foreach (var prop in typeof(EnvVariables).GetProperties())
-    {
-        var secretKey = EnvVariables.ToDockerVariables(prop.Name);
-        var secretVal = builder.Configuration[secretKey];
-        if (!string.IsNullOrWhiteSpace(secretVal))
-            prop.SetValue(options, Convert.ChangeType(secretVal, prop.PropertyType));
-    }
-});
 
 builder.Services.AddDbContextFactory<ApiDbContext>(opts =>
     opts.UseNpgsql(connectionString));

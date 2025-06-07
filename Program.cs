@@ -100,7 +100,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: myAllowSpecificOrigins,
         policyBuilder =>
         {
-            policyBuilder.WithOrigins("https://crypto-crush-api.duckdns.org")
+            policyBuilder.WithOrigins("https://crypto-crush-monad.xyz")
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials();

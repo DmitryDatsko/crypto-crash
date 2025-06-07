@@ -37,6 +37,10 @@ public class MonadService : IMonadService
     public async Task<TransactionReceipt?> VerifyTransactionAsync(
         TransactionRequest request, CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrEmpty(_env.ContractOwnerPrivateKey))
+        {
+            _logger.LogError("Contract owner private key not found");
+        }
         /*if (!await OnConnected())
         {
             _logger.LogError("not connected");
@@ -80,6 +84,11 @@ public class MonadService : IMonadService
     public async Task AddWinnersBalance(
         Dictionary<Bet, decimal> payouts, CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrEmpty(_env.ContractOwnerPrivateKey))
+        {
+            _logger.LogError("Contract owner private key not found");
+        }
+        
         var handler = _web3OwnerKey.Eth.GetContractTransactionHandler<AddWinnersBalanceFunction>();
 
         foreach (var batchDict in ChuckDictionary(payouts, 200))

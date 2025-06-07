@@ -149,14 +149,14 @@ builder.Services.AddAuthentication(options =>
     {
         OnMessageReceived = context =>
         {
-            if (context.Request.Cookies.TryGetValue("VerifyAddress", out var token))
+            if (context.Request.Cookies.TryGetValue(cookieName, out var token))
             {
                 context.Token = token;
             }
 
             if (string.IsNullOrEmpty(context.Token))
             {
-                context.Token = context.Request.Query["VerifyAddress"];
+                context.Token = context.Request.Query[cookieName];
             }
             
             return Task.CompletedTask;

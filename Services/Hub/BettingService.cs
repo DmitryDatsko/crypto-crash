@@ -11,7 +11,6 @@ using CryptoCrush.Services.Monad;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using Nethereum.Util;
 
 namespace CryptoCrush.Services.Hub;
 

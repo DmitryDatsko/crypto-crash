@@ -84,11 +84,7 @@ public class MonadService : IMonadService
     public async Task AddWinnersBalance(
         Dictionary<Bet, decimal> payouts, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrEmpty(_env.ContractOwnerPrivateKey))
-        {
-            _logger.LogError("Contract owner private key not found");
-        }
-        
+        _logger.LogInformation("In add winners balance");
         var handler = _web3OwnerKey.Eth.GetContractTransactionHandler<AddWinnersBalanceFunction>();
 
         foreach (var batchDict in ChuckDictionary(payouts, 200))

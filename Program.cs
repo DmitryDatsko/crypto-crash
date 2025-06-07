@@ -52,21 +52,12 @@ string jwtSecret =
     )
     ?? throw new InvalidOperationException("JwtTokenSecret is missing");
 
-Console.WriteLine($"jwtSecret: {jwtSecret}");
-Console.WriteLine($"connectionString: {connectionString}");
-Console.WriteLine($"cookieName: {cookieName}");
-
 builder.Services.Configure<EnvVariables>(options =>
 {
     builder.Configuration
         .GetSection(nameof(EnvVariables))
         .Bind(options);
     
-    Console.WriteLine("🔹 Values from appsettings.json:");
-    Console.WriteLine($"    CookieName            = {options.CookieName}");
-    Console.WriteLine($"    RequiredConfirmations = {options.RequiredConfirmations}");
-    Console.WriteLine($"    MempoolTimeSec        = {options.MempoolTimeSec}");
-
     foreach (var prop in typeof(EnvVariables).GetProperties())
     {
         var secretKey = EnvVariables.ToDockerVariables(prop.Name);
@@ -74,7 +65,6 @@ builder.Services.Configure<EnvVariables>(options =>
 
         if (section.Exists() && !string.IsNullOrWhiteSpace(section.Value))
         {
-            Console.WriteLine($"🔸 Overriding {prop.Name} with secret `{secretKey}` = `{section.Value}`");
             prop.SetValue(options, Convert.ChangeType(section.Value, prop.PropertyType));
         }
     }

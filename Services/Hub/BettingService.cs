@@ -335,8 +335,8 @@ public class BettingService : BackgroundService
 
                 var winningBets = await db.Bets
                     .AsNoTracking()
-                    .Where(b => b.GameId == _gameId &&
-                                Equals(b.Side == gameResult.ToString(), StringComparison.OrdinalIgnoreCase))
+                    .Where(b => b.GameId == _gameId && 
+                                 b.Side.ToLower() == gameResult.ToString().ToLower())
                     .ToListAsync(stoppingToken);
                 
                 var totalPool = await db.Bets.AsNoTracking()
@@ -344,6 +344,8 @@ public class BettingService : BackgroundService
                     .SumAsync(b => b.Amount, stoppingToken);
                 
                 await PayoutCalculator(totalPool, winningBets);
+                
+                _logger.LogInformation($"Winners amount: {winningBets.Count}");
                 
                 ClearPixelsDictionary();
                 _prices.Clear();

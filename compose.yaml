@@ -105,8 +105,6 @@ secrets:
     external: true
   ssl_dhparams:
     external: true
-  network_id:
-    external: true
 
 volumes:
   pgdata_crypto_crush:

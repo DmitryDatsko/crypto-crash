@@ -61,12 +61,19 @@ builder.Services.Configure<EnvVariables>(options =>
     builder.Configuration
         .GetSection(nameof(EnvVariables))
         .Bind(options);
+    
+    Console.WriteLine("🔹 Values from appsettings.json:");
+    Console.WriteLine($"    CookieName            = {options.CookieName}");
+    Console.WriteLine($"    RequiredConfirmations = {options.RequiredConfirmations}");
+    Console.WriteLine($"    MempoolTimeSec        = {options.MempoolTimeSec}");
 
     foreach (var prop in typeof(EnvVariables).GetProperties())
     {
         var secretKey = EnvVariables.ToDockerVariables(prop.Name);
         var secretVal = builder.Configuration[secretKey];
-        Console.WriteLine($"{prop.Name}: {secretKey} => {secretVal}");
+        Console.WriteLine(
+            $"🔸 Overriding {prop.Name}: file=`{secretKey}` => `{secretVal}`"
+        );
         if (!string.IsNullOrWhiteSpace(secretVal))
             prop.SetValue(options, Convert.ChangeType(secretVal, prop.PropertyType));
     }

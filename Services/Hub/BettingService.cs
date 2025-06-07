@@ -317,7 +317,10 @@ public class BettingService : BackgroundService
                     .Select(b => new BetDto
                     {
                         Amount = b.Amount,
-                        IsWinner = Equals(b.Side == gameResult.ToString(), StringComparison.OrdinalIgnoreCase),
+                        IsWinner = string.Equals(
+                            b.Side,
+                            gameResult.ToString(),
+                            StringComparison.OrdinalIgnoreCase),
                         UserAddress = b.UserAddress
                     })
                     .ToListAsync(stoppingToken);

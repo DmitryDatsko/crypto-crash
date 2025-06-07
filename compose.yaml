@@ -56,9 +56,9 @@ services:
       - frontend
     secrets:
       - ssl_dhparams
-      - ssl_fullchain
       - ssl_options
-      - ssl_privkey
+      - godaddy_cert_fullchain
+      - godaddy_cert_privkey
     networks:
       - backend_net
     deploy:
@@ -97,11 +97,11 @@ secrets:
     external: true
   rpc_url:
     external: true
-  ssl_privkey:
+  godaddy_cert_privkey:
     external: true
   ssl_options:
     external: true
-  ssl_fullchain:
+  godaddy_cert_fullchain:
     external: true
   ssl_dhparams:
     external: true

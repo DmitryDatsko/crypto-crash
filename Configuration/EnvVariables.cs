@@ -3,7 +3,7 @@ public class EnvVariables
 {
     public string RpcUrl { get; set; } = string.Empty;
     public string ContractOwnerPrivateKey { get; set; } = string.Empty;
-    public string NetworkId { get; set; } = string.Empty;
+    public int NetworkId { get; set; }
     public string ContractAddress { get; set; } = string.Empty;
     public string JwtTokenSecret { get; set; } = string.Empty;
     public string PostgresConnectionString { get; set; } = string.Empty;

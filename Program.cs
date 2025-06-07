@@ -70,12 +70,13 @@ builder.Services.Configure<EnvVariables>(options =>
     foreach (var prop in typeof(EnvVariables).GetProperties())
     {
         var secretKey = EnvVariables.ToDockerVariables(prop.Name);
-        var secretVal = builder.Configuration[secretKey];
-        Console.WriteLine(
-            $"🔸 Overriding {prop.Name}: file=`{secretKey}` => `{secretVal}`"
-        );
-        if (!string.IsNullOrWhiteSpace(secretVal))
-            prop.SetValue(options, Convert.ChangeType(secretVal, prop.PropertyType));
+        var section   = builder.Configuration.GetSection(secretKey);
+
+        if (section.Exists() && !string.IsNullOrWhiteSpace(section.Value))
+        {
+            Console.WriteLine($"🔸 Overriding {prop.Name} with secret `{secretKey}` = `{section.Value}`");
+            prop.SetValue(options, Convert.ChangeType(section.Value, prop.PropertyType));
+        }
     }
 });
 

@@ -28,6 +28,30 @@ builder.Configuration
     .AddDotNetEnv()
     .AddDockerSecrets();
 
+string connectionString =
+    builder.Configuration.GetValue<string>(
+        $"{nameof(EnvVariables)}:{nameof(EnvVariables.PostgresConnectionString)}"
+    )
+    ?? builder.Configuration.GetValue<string>(
+        EnvVariables.ToDockerVariables(nameof(EnvVariables.PostgresConnectionString))
+    )
+    ?? throw new InvalidOperationException("PostgresConnectionString is missing");
+
+string cookieName =
+    builder.Configuration.GetValue<string>(
+        $"{nameof(EnvVariables)}:{nameof(EnvVariables.CookieName)}"
+    )
+    ?? throw new InvalidOperationException("CookieName is missing");
+
+string jwtSecret =
+    builder.Configuration.GetValue<string>(
+        $"{nameof(EnvVariables)}:{nameof(EnvVariables.JwtTokenSecret)}"
+    )
+    ?? builder.Configuration.GetValue<string>(
+        EnvVariables.ToDockerVariables(nameof(EnvVariables.JwtTokenSecret))
+    )
+    ?? throw new InvalidOperationException("JwtTokenSecret is missing");
+
 builder.Services.Configure<EnvVariables>(options =>
 {
     builder.Configuration
@@ -42,23 +66,6 @@ builder.Services.Configure<EnvVariables>(options =>
             prop.SetValue(options, Convert.ChangeType(secretVal, prop.PropertyType));
     }
 });
-
-var envSection = builder.Configuration.GetSection(nameof(EnvVariables));
-
-var connectionString = envSection.GetValue<string>(
-    nameof(EnvVariables.PostgresConnectionString)
-) ?? throw new InvalidOperationException("PostgresConnectionString is missing");
-
-var cookieName = envSection.GetValue<string>(
-    nameof(EnvVariables.CookieName)
-) ?? throw new InvalidOperationException("CookieName is missing");
-
-var jwtSecret = envSection.GetValue<string>(
-    nameof(EnvVariables.JwtTokenSecret)
-) ?? throw new InvalidOperationException("JwtTokenSecret is missing");
-
-if (cookieName != "VerifyAddress")
-    Console.WriteLine($"Invalid cookie name: {cookieName}");
 
 builder.Services.AddDbContextFactory<ApiDbContext>(opts =>
     opts.UseNpgsql(connectionString));

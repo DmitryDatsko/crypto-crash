@@ -52,6 +52,10 @@ string jwtSecret =
     )
     ?? throw new InvalidOperationException("JwtTokenSecret is missing");
 
+Console.WriteLine($"jwtSecret: {jwtSecret}");
+Console.WriteLine($"connectionString: {connectionString}");
+Console.WriteLine($"cookieName: {cookieName}");
+
 builder.Services.Configure<EnvVariables>(options =>
 {
     builder.Configuration
@@ -62,6 +66,7 @@ builder.Services.Configure<EnvVariables>(options =>
     {
         var secretKey = EnvVariables.ToDockerVariables(prop.Name);
         var secretVal = builder.Configuration[secretKey];
+        Console.WriteLine($"{prop.Name}: {secretKey} => {secretVal}");
         if (!string.IsNullOrWhiteSpace(secretVal))
             prop.SetValue(options, Convert.ChangeType(secretVal, prop.PropertyType));
     }

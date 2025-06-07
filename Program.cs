@@ -36,6 +36,12 @@ if (builder.Environment.IsDevelopment())
     cookieName = Environment.GetEnvironmentVariable(nameof(EnvVariables.CookieName)) ?? string.Empty;
     jwtSecret = Environment.GetEnvironmentVariable(EnvVariables
         .ToEnvVariables(nameof(EnvVariables.JwtTokenSecret))) ?? string.Empty;
+
+    if (cookieName != "VerifyAddress")
+    {
+        Console.WriteLine("Invalid cookie name");
+        Console.WriteLine($"cookie name: {cookieName}");
+    }
 }
 else
 {
@@ -46,6 +52,12 @@ else
     cookieName = Environment.GetEnvironmentVariable(nameof(EnvVariables.CookieName)) ?? string.Empty;
     jwtSecret = 
         builder.Configuration[EnvVariables.ToDockerVariables(nameof(EnvVariables.JwtTokenSecret))] ?? string.Empty;
+    
+    if (cookieName != "VerifyAddress")
+    {
+        Console.WriteLine("Invalid cookie name");
+        Console.WriteLine($"cookie name: {cookieName}");
+    }
 }
 
 builder.Services.Configure<EnvVariables>(options =>

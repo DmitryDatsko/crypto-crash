@@ -10,6 +10,7 @@ using CryptoCrush.Services.Hub;
 using CryptoCrush.Services.Monad;
 using CryptoCrush.Services.Token;
 using DotNetEnv;
+using DotNetEnv.Configuration;
 using Mcrio.Configuration.Provider.Docker.Secrets;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.CookiePolicy;
@@ -20,83 +21,42 @@ using Microsoft.IdentityModel.Tokens;
 var builder = WebApplication.CreateBuilder(args);
 
 var myAllowSpecificOrigins = "_myAllowSpecificOrigins";
-string connectionString, cookieName, jwtSecret;
 
 builder.Configuration
     .SetBasePath(builder.Environment.ContentRootPath)
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-    .AddEnvironmentVariables();
+    .AddDotNetEnv()
+    .AddDockerSecrets();
 
-if (builder.Environment.IsDevelopment())
-{
-    Env.Load();
-    builder.Configuration.AddEnvironmentVariables();
-    connectionString = Environment.GetEnvironmentVariable(EnvVariables
-        .ToEnvVariables(nameof(EnvVariables.PostgresConnectionString))) ?? string.Empty;
-    cookieName = builder.Configuration["EnvVariables:CookieName"] ?? string.Empty;
-    jwtSecret = Environment.GetEnvironmentVariable(EnvVariables
-        .ToEnvVariables(nameof(EnvVariables.JwtTokenSecret))) ?? string.Empty;
+var envSection = builder.Configuration.GetSection(nameof(EnvVariables));
 
-    if (cookieName != "VerifyAddress")
-    {
-        Console.WriteLine("Invalid cookie name");
-    }
-    Console.WriteLine($"cookie name: {cookieName}");
-}
-else
-{
-    builder.Configuration.AddEnvironmentVariables();
-    builder.Configuration.AddDockerSecrets();
-    connectionString = 
-        builder.Configuration[EnvVariables.ToDockerVariables(nameof(EnvVariables.PostgresConnectionString))] ?? string.Empty;
-    cookieName = builder.Configuration["EnvVariables:CookieName"] ?? string.Empty;
-    jwtSecret = 
-        builder.Configuration[EnvVariables.ToDockerVariables(nameof(EnvVariables.JwtTokenSecret))] ?? string.Empty;
-    
-    if (cookieName != "VerifyAddress")
-    {
-        Console.WriteLine("Invalid cookie name");
-    }
-    Console.WriteLine($"cookie name: {cookieName}");
-}
+var connectionString = envSection.GetValue<string>(
+    nameof(EnvVariables.PostgresConnectionString)
+) ?? throw new InvalidOperationException("PostgresConnectionString is missing");
+
+var cookieName = envSection.GetValue<string>(
+    nameof(EnvVariables.CookieName)
+) ?? throw new InvalidOperationException("CookieName is missing");
+
+var jwtSecret = envSection.GetValue<string>(
+    nameof(EnvVariables.JwtTokenSecret)
+) ?? throw new InvalidOperationException("JwtTokenSecret is missing");
+
+if (cookieName != "VerifyAddress")
+    Console.WriteLine($"Invalid cookie name: {cookieName}");
 
 builder.Services.Configure<EnvVariables>(options =>
 {
-    builder.Configuration.GetSection("EnvVariables").Bind(options);
-    
-    if (builder.Environment.IsDevelopment())
+    builder.Configuration
+        .GetSection(nameof(EnvVariables))
+        .Bind(options);
+
+    foreach (var prop in typeof(EnvVariables).GetProperties())
     {
-        var toEnvVars = EnvVariables.ToEnvVariables;
-        
-        options.RpcUrl = Environment
-            .GetEnvironmentVariable(toEnvVars(nameof(EnvVariables.RpcUrl))) ?? string.Empty;
-        options.ContractOwnerPrivateKey = Environment
-            .GetEnvironmentVariable(toEnvVars(nameof(EnvVariables.ContractOwnerPrivateKey))) ?? string.Empty;
-        options.NetworkId = Environment
-            .GetEnvironmentVariable(toEnvVars(nameof(EnvVariables.NetworkId))) ?? string.Empty;
-        options.ContractAddress = Environment
-            .GetEnvironmentVariable(toEnvVars(nameof(EnvVariables.ContractAddress))) ?? string.Empty;
-        options.JwtTokenSecret = Environment
-            .GetEnvironmentVariable(toEnvVars(nameof(EnvVariables.JwtTokenSecret))) ?? string.Empty;
-        options.PostgresConnectionString = Environment
-            .GetEnvironmentVariable(toEnvVars(nameof(EnvVariables.PostgresConnectionString))) ?? string.Empty;
-    }
-    else
-    {
-        var toDockerVars = EnvVariables.ToDockerVariables;
-        
-        options.RpcUrl = 
-            builder.Configuration[toDockerVars(nameof(EnvVariables.RpcUrl))] ?? string.Empty;
-        options.ContractOwnerPrivateKey = 
-            builder.Configuration[toDockerVars(nameof(EnvVariables.ContractOwnerPrivateKey))] ?? string.Empty;
-        options.NetworkId = 
-            builder.Configuration[toDockerVars(nameof(EnvVariables.NetworkId))] ?? string.Empty;
-        options.ContractAddress = 
-            builder.Configuration[toDockerVars(nameof(EnvVariables.ContractAddress))] ?? string.Empty;
-        options.JwtTokenSecret = 
-            builder.Configuration[toDockerVars(nameof(EnvVariables.JwtTokenSecret))] ?? string.Empty;
-        options.PostgresConnectionString = 
-            builder.Configuration[toDockerVars(nameof(EnvVariables.PostgresConnectionString))] ?? string.Empty;
+        var secretKey = EnvVariables.ToDockerVariables(prop.Name);
+        var secretVal = builder.Configuration[secretKey];
+        if (!string.IsNullOrWhiteSpace(secretVal))
+            prop.SetValue(options, Convert.ChangeType(secretVal, prop.PropertyType));
     }
 });
 

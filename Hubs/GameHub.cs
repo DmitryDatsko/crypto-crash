@@ -20,7 +20,15 @@ public sealed class GameHub(
 {
     public override async Task OnConnectedAsync()
     {
-        await Clients.Caller.SendAsync(HubMethods.OnConnected, bettingService.ReadState());
+        var bettingState =  bettingService.ReadState();
+        await Clients.Caller.SendAsync(HubMethods.OnConnected, new
+        {
+           bettingState.IsBettingOpen,
+           bettingState.IsGameStarted,
+           bettingState.GameId,
+           bets = hubBettingService.GetAllBets(),
+           bank = hubBettingService.GetBank()
+        });
         await base.OnConnectedAsync();
     }
     

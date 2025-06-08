@@ -70,6 +70,7 @@ builder.Services.Configure<EnvVariables>(options =>
     }
 });
 
+JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear(); 
 builder.Services.AddDbContextFactory<ApiDbContext>(opts =>
     opts.UseNpgsql(connectionString));
 
@@ -116,6 +117,9 @@ builder.Services.AddAuthentication(options =>
 {
     options.RequireHttpsMetadata = true;
     options.SaveToken = true;
+    
+    options.MapInboundClaims = false;
+    
     options.TokenValidationParameters = new()
     {
         ValidateIssuerSigningKey = true,
@@ -124,7 +128,8 @@ builder.Services.AddAuthentication(options =>
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero,
         IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.ASCII.GetBytes(jwtSecret))
+            Encoding.ASCII.GetBytes(jwtSecret)),
+        NameClaimType = JwtRegisteredClaimNames.Sub
 	};
 
     options.Events = new JwtBearerEvents

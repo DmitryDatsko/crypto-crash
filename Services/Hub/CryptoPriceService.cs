@@ -21,7 +21,6 @@ public class CryptoPriceService: BackgroundService
         }
     }
     public event EventHandler<decimal>? OnPriceChanged;
-
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         try

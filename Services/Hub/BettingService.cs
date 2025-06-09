@@ -294,9 +294,19 @@ public class BettingService : BackgroundService
                 
                 await timerTask;
                 _cryptoPriceService.OnPriceChanged -= HandlePriceChanged;
-                
-                BetSides gameResult = _prices[^1] == _prices[0] ? BetSides.Tie :
-                    _prices[^1] > _prices[0] ? BetSides.Long : BetSides.Short;
+
+                BetSides gameResult;
+
+                if (_prices.Count < 2)
+                {
+                    _logger.LogWarning("Prices less than needed");
+                    gameResult = BetSides.Tie;
+                }
+                else
+                {
+                    gameResult = _prices[^1] == _prices[0] ? BetSides.Tie :
+                        _prices[^1] > _prices[0] ? BetSides.Long : BetSides.Short;
+                }
                 
                 newGame.WinningSide = gameResult.ToString();
                 await db.SaveChangesAsync(stoppingToken);

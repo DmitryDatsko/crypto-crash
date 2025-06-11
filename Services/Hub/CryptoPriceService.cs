@@ -5,9 +5,9 @@ using Newtonsoft.Json.Linq;
 
 namespace CryptoCrush.Services.Hub;
 
-public class CryptoPriceService: BackgroundService
+public class CryptoPriceService(ILogger<CryptoPriceService> logger): BackgroundService
 {
-    private readonly ClientWebSocket _client = new();
+    private ClientWebSocket _client = null!;
     private static readonly Uri Uri = new("wss://stream.bybit.com/v5/public/spot");
     private const string Topic = "tickers.BTCUSDT";
     private decimal _price;
@@ -23,55 +23,64 @@ public class CryptoPriceService: BackgroundService
     public event EventHandler<decimal>? OnPriceChanged;
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        try
+        var backoff = TimeSpan.FromSeconds(1);
+
+        while (!stoppingToken.IsCancellationRequested)
         {
-            await _client.ConnectAsync(Uri, stoppingToken);
-
-            string subscribeMessage = $@"{{
-                ""op"": ""subscribe"",
-                ""args"": [""{Topic}""]
-            }}";
-
-            await _client.SendAsync(
-                new ArraySegment<byte>(Encoding.UTF8.GetBytes(subscribeMessage)),
-                WebSocketMessageType.Text,
-                true, CancellationToken.None);
-
-            var buffer = new byte[8192];
-
-            while (_client.State == WebSocketState.Open)
+            try
             {
-                var result = await _client.ReceiveAsync(new ArraySegment<byte>(buffer), stoppingToken);
-
-                if (result.MessageType == WebSocketMessageType.Text)
+                _client?.Dispose();
+                _client = new ClientWebSocket
                 {
+                    Options = { KeepAliveInterval = TimeSpan.FromSeconds(30) }
+                };
+                await _client.ConnectAsync(Uri, stoppingToken);
+
+                var subscribeMsg = Encoding.UTF8.GetBytes($@"{{
+                    ""op"": ""subscribe"",
+                    ""args"": [""{Topic}""]
+                }}");
+
+                await _client.SendAsync(subscribeMsg, WebSocketMessageType.Text, true, stoppingToken);
+
+                backoff = TimeSpan.FromSeconds(1);
+
+                var buffer = new byte[8192];
+                while (_client.State == WebSocketState.Open && !stoppingToken.IsCancellationRequested)
+                {
+                    var result = await _client.ReceiveAsync(buffer, stoppingToken);
+                    if (result.MessageType != WebSocketMessageType.Text)
+                        continue;
+
                     var message = Encoding.UTF8.GetString(buffer, 0, result.Count);
                     JObject json = JObject.Parse(message);
 
-                    if (json["topic"]?.ToString() == Topic)
+                    if (json["topic"]?.ToString() == Topic &&
+                        decimal.TryParse(json["data"]?["lastPrice"]?.ToString(),
+                            NumberStyles.Any, CultureInfo.InvariantCulture, out var lastPrice))
                     {
-                        var spot = json["data"];
-                        if (spot != null)
-                        {
-                            var closePrice = spot["lastPrice"]?.ToString();
-
-                            if (decimal.TryParse(closePrice, CultureInfo.InvariantCulture, out var price))
-                            {
-                                Price = price;
-                            }
-                        }
+                        Price = lastPrice;
                     }
                 }
             }
-        }
-        finally
-        {
-            if (_client.State == WebSocketState.Open || _client.State == WebSocketState.CloseReceived)
+            catch (OperationCanceledException)
             {
-                await _client.CloseAsync(WebSocketCloseStatus.NormalClosure, "Service stopping", stoppingToken);
+                break;
             }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "WebSocket disconnected, reconnect in {Delay}s", backoff.TotalSeconds);
+                await Task.Delay(backoff, stoppingToken);
 
-            _client.Dispose();
+                backoff = TimeSpan.FromSeconds(Math.Min(backoff.TotalSeconds * 2, 60));
+            }
         }
+        
+        if(_client.State is WebSocketState.Open or WebSocketState.CloseReceived)
+        {
+            await _client.CloseAsync(WebSocketCloseStatus.NormalClosure,
+                "Service stopping", CancellationToken.None);
+        }
+        _client.Dispose();
     }
 }

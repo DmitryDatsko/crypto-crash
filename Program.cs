@@ -95,13 +95,14 @@ builder.Services.AddHostedService(provider => provider.GetRequiredService<Bettin
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(name: myAllowSpecificOrigins,
         policyBuilder =>
         {
-            policyBuilder.WithOrigins("https://crypto-crush-monad.xyz")
+            policyBuilder.WithOrigins(builder.Environment.IsDevelopment() ? 
+                    "http://localhost:3000" :
+                    "https://crypto-crush-monad.xyz")
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials();
@@ -115,7 +116,7 @@ builder.Services.AddAuthentication(options =>
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 }).AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
 {
-    options.RequireHttpsMetadata = true;
+    options.RequireHttpsMetadata = builder.Environment.IsProduction();
     options.SaveToken = true;
     
     options.MapInboundClaims = false;

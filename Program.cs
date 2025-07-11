@@ -173,7 +173,6 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHub<GameHub>("/gamehub");
 
-
 app.Run();
 void SeedDatabase()
 {

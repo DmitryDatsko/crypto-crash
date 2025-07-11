@@ -26,8 +26,10 @@ public class HubAuthorize(
                 logger.LogCritical("Invalid cookie");
                 await invocationContext.Hub.Clients.Caller
                     .SendAsync(HubMethods.BetRejected, "Invalid cookie");
+                
+                httpContext?.Response.Cookies.Delete(_env.CookieName);
             
-                return null;
+                throw new HubException("Invalid cookie");
             }
         }
         

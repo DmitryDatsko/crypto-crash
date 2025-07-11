@@ -103,7 +103,7 @@ public class AuthController(
                 HttpOnly = true,
                 Domain = "crypto-crush-monad.xyz",
                 SameSite = SameSiteMode.None,
-                Expires = DateTime.UtcNow.AddDays(1)
+                Expires = DateTime.UtcNow.AddDays(30)
             });
     }
     private void RemoveCookie(HttpContext httpContext)

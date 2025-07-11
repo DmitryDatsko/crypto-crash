@@ -31,8 +31,8 @@ public class MonadService : IMonadService
         _requiredConfirmations = _env.RequiredConfirmations;
         
         _logger = logger;
-    }
-    //private async Task<bool> OnConnected() => await _web3.Net.Version.SendRequestAsync() == _env.NetworkId;
+    } 
+    private async Task<bool> OnConnected() => await _web3.Net.Version.SendRequestAsync() == _env.NetworkId.ToString();
     
     public async Task<TransactionReceipt?> VerifyTransactionAsync(
         TransactionRequest request, CancellationToken cancellationToken = default)
@@ -41,11 +41,11 @@ public class MonadService : IMonadService
         {
             _logger.LogError("Contract owner private key not found");
         }
-        /*if (!await OnConnected())
+        if (!await OnConnected())
         {
             _logger.LogError("not connected");
             return null;
-        }*/
+        }
         
         var inMempool = await WaitForMempoolAsync(
             request.TransactionHash, cancellationToken);
@@ -77,6 +77,8 @@ public class MonadService : IMonadService
                 
             await Task.Delay(TimeSpan.FromMilliseconds(400), cancellationToken);
         }
+        
+        _logger.LogInformation("Bet successfully placed");
         
         return receipt;
     }

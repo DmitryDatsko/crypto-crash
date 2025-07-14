@@ -16,21 +16,13 @@ public class HubAuthorize(
         Func<HubInvocationContext, ValueTask<object?>> next)
     {
         logger.LogInformation("In filter");
-        var httpContext = invocationContext.Context.GetHttpContext();
+        var httpContext = invocationContext.Context.GetHttpContext() ?? throw new HubException("In filter");
 
-        if (invocationContext.HubMethodName == nameof(GameHub.PlaceBet))
+        bool isAuthenticated = httpContext.User.Identity?.IsAuthenticated ?? false;
+        
+        if (!isAuthenticated)
         {
-            if (httpContext == null
-                || !httpContext.Request.Cookies.ContainsKey(_env.CookieName))
-            {
-                logger.LogCritical("Invalid cookie");
-                await invocationContext.Hub.Clients.Caller
-                    .SendAsync(HubMethods.BetRejected, "Invalid cookie");
-                
-                httpContext?.Response.Cookies.Delete(_env.CookieName);
-            
-                throw new HubException("Invalid cookie");
-            }
+            throw new HubException("User is not authenticated");
         }
         
         return await next(invocationContext);

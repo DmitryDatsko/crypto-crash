@@ -101,7 +101,7 @@ public class AuthController(
                 Path = "/",
                 Secure = true,
                 HttpOnly = true,
-                Domain = "crypto-crush-monad.xyz",
+               // Domain = "crypto-crush-monad.xyz",
                 SameSite = SameSiteMode.None,
                 Expires = DateTime.UtcNow.AddDays(30)
             });
@@ -111,7 +111,7 @@ public class AuthController(
         httpContext.Response.Cookies.Delete(_env.CookieName, new CookieOptions
         {
             Path = "/",
-            Domain = "crypto-crush-monad.xyz",
+            //Domain = "crypto-crush-monad.xyz",
             Secure = true,
             HttpOnly = true,
             SameSite = SameSiteMode.None,

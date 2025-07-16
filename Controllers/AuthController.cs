@@ -17,9 +17,11 @@ namespace CryptoCrush.Controllers;
 [Route("api/auth")]
 public class AuthController(
     IOptions<EnvVariables> env,
-    IUserIdentity userIdentity) : ControllerBase
+    IUserIdentity userIdentity,
+    IWebHostEnvironment webHostEnv) : ControllerBase
 {
     private readonly EnvVariables _env = env.Value;
+    private readonly bool _isDev = webHostEnv.IsDevelopment();
 
     [HttpPost("verify")]
     public IActionResult Authenticate([FromBody] AuthenticationRequest request)
@@ -101,7 +103,9 @@ public class AuthController(
                 Path = "/",
                 Secure = true,
                 HttpOnly = true,
-                SameSite = SameSiteMode.Lax,
+                SameSite = _isDev ?
+                    SameSiteMode.None :
+                    SameSiteMode.Lax,
                 Expires = DateTime.UtcNow.AddDays(30)
             });
     }
@@ -112,7 +116,9 @@ public class AuthController(
             Path = "/",
             Secure = true,
             HttpOnly = true,
-            SameSite = SameSiteMode.Lax,
+            SameSite = _isDev ?
+                SameSiteMode.None :
+                SameSiteMode.Lax,
             Expires = DateTimeOffset.UnixEpoch
         });
     }

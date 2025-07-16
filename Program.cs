@@ -161,7 +161,9 @@ app.UseCors(myAllowSpecificOrigins);
 
 app.UseCookiePolicy(new CookiePolicyOptions
 {
-    MinimumSameSitePolicy = SameSiteMode.Lax,
+    MinimumSameSitePolicy = builder.Environment.IsProduction() ?
+        SameSiteMode.Lax
+        : SameSiteMode.None,
     HttpOnly = HttpOnlyPolicy.Always,
     Secure = CookieSecurePolicy.Always
 });

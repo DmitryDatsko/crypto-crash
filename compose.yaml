@@ -1,15 +1,6 @@
-﻿configs:
-  default_nginx_conf:
-    file: ../nginx/nginx.conf
-
-services:
-  backend:
+﻿services:
+  backend_cr:
     image: crypto-crush:latest
-    restart: always
-    deploy:
-      replicas: 1
-      restart_policy:
-        condition: on-failure
     secrets:
       - contract_address
       - contract_owner_private_key
@@ -26,58 +17,25 @@ services:
       - "5001:8081"
     networks:
       - backend_net
+      - proxy
         
   crypto_crush_db:
-    image: postgres
-    restart: always
+    image: postgres:18
     ports:
-      - "5433:5432"
+      - "5432:5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD_FILE: /run/secrets/db_password
       POSTGRES_DB: crypto_crush
     volumes:
-      - pgdata_crypto_crush:/var/lib/postgresql/data
+     - postgres18_data:/var/lib/postgresql
     secrets:
       - db_password
     networks:
       - backend_net
   
-  nginx:
-    image: nginx
-    ports:
-      - "80:80"
-      - "443:443"
-    configs:
-      - source: default_nginx_conf
-        target: /etc/nginx/nginx.conf
-    volumes:
-      - nextjs_cache:/var/cache/nginx/nextjs_cache
-      - frontend_static:/usr/share/nginx/html/_next/static:ro
-    depends_on:
-      - backend
-      - frontend
-    secrets:
-      - ssl_dhparams
-      - ssl_options
-      - godaddy_cert_fullchain
-      - godaddy_cert_privkey
-    networks:
-      - backend_net
-    deploy:
-      restart_policy:
-        condition: on-failure
-        delay: 10s
-        max_attempts: 5
-
-
-  frontend:
-    image: my-next-app:latest
-    restart: always
-    deploy:
-      replicas: 1
-      restart_policy:
-        condition: on-failure
+  frontend_cr:
+    image: crypto_crush_front:latest
     environment:
       - NODE_ENV=production
     ports:
@@ -86,6 +44,7 @@ services:
       - frontend_static:/app/.next/static:ro
     networks:
       - backend_net
+      - proxy
 
 secrets:
   db_password:
@@ -102,20 +61,14 @@ secrets:
     external: true
   rpc_url:
     external: true
-  godaddy_cert_privkey:
-    external: true
-  ssl_options:
-    external: true
-  godaddy_cert_fullchain:
-    external: true
-  ssl_dhparams:
-    external: true
 
 volumes:
-  pgdata_crypto_crush:
+  postgres18_data:
   nextjs_cache:
   frontend_static:
 
 networks:
   backend_net:
     driver: overlay
+  proxy:
+    external: true

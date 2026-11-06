@@ -22,8 +22,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 var myAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
-builder.Configuration
-    .SetBasePath(builder.Environment.ContentRootPath)
+builder
+    .Configuration.SetBasePath(builder.Environment.ContentRootPath)
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
     .AddDotNetEnv()
     .AddDockerSecrets();
@@ -40,8 +40,7 @@ string connectionString =
 string cookieName =
     builder.Configuration.GetValue<string>(
         $"{nameof(EnvVariables)}:{nameof(EnvVariables.CookieName)}"
-    )
-    ?? throw new InvalidOperationException("CookieName is missing");
+    ) ?? throw new InvalidOperationException("CookieName is missing");
 
 string jwtSecret =
     builder.Configuration.GetValue<string>(
@@ -54,14 +53,12 @@ string jwtSecret =
 
 builder.Services.Configure<EnvVariables>(options =>
 {
-    builder.Configuration
-        .GetSection(nameof(EnvVariables))
-        .Bind(options);
-    
+    builder.Configuration.GetSection(nameof(EnvVariables)).Bind(options);
+
     foreach (var prop in typeof(EnvVariables).GetProperties())
     {
         var secretKey = EnvVariables.ToDockerVariables(prop.Name);
-        var section   = builder.Configuration.GetSection(secretKey);
+        var section = builder.Configuration.GetSection(secretKey);
 
         if (section.Exists() && !string.IsNullOrWhiteSpace(section.Value))
         {
@@ -70,12 +67,12 @@ builder.Services.Configure<EnvVariables>(options =>
     }
 });
 
-JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear(); 
-builder.Services.AddDbContextFactory<ApiDbContext>(opts =>
-    opts.UseNpgsql(connectionString));
+JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+builder.Services.AddDbContextFactory<ApiDbContext>(opts => opts.UseNpgsql(connectionString));
 
 builder.Services.AddControllers();
-builder.Services.AddSignalR()
+builder
+    .Services.AddSignalR()
     .AddHubOptions<GameHub>(opts => opts.AddFilter<HubAuthorize>())
     .AddJsonProtocol(options =>
     {
@@ -97,60 +94,69 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy(name: myAllowSpecificOrigins,
+    options.AddPolicy(
+        name: myAllowSpecificOrigins,
         policyBuilder =>
         {
-            policyBuilder.WithOrigins(builder.Environment.IsDevelopment() ? 
-                    "http://localhost:3000" :
-                    "https://crypto-crush-monad.xyz")
+            policyBuilder
+                .WithOrigins(
+                    builder.Environment.IsDevelopment()
+                        ? "http://localhost:3000"
+                        : "https://cryptocrash.dmytrodatsko.dev"
+                )
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials();
-        });
-});
-
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultSignInScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
-{
-    options.RequireHttpsMetadata = builder.Environment.IsProduction();
-    options.SaveToken = true;
-    
-    options.MapInboundClaims = false;
-    
-    options.TokenValidationParameters = new()
-    {
-        ValidateIssuerSigningKey = true,
-        ValidateIssuer = false,
-        ValidateAudience = false,
-        ValidateLifetime = true,
-        ClockSkew = TimeSpan.Zero,
-        IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.ASCII.GetBytes(jwtSecret)),
-        NameClaimType = JwtRegisteredClaimNames.Sub
-	};
-
-    options.Events = new JwtBearerEvents
-    {
-        OnMessageReceived = context =>
-        {
-            if (context.Request.Cookies.TryGetValue(cookieName, out var token))
-            {
-                context.Token = token;
-            }
-
-            if (string.IsNullOrEmpty(context.Token))
-            {
-                context.Token = context.Request.Query[cookieName];
-            }
-            
-            return Task.CompletedTask;
         }
-    };
+    );
 });
+
+builder
+    .Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultSignInScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(
+        JwtBearerDefaults.AuthenticationScheme,
+        options =>
+        {
+            options.RequireHttpsMetadata = builder.Environment.IsProduction();
+            options.SaveToken = true;
+
+            options.MapInboundClaims = false;
+
+            options.TokenValidationParameters = new()
+            {
+                ValidateIssuerSigningKey = true,
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.Zero,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtSecret)),
+                NameClaimType = JwtRegisteredClaimNames.Sub,
+            };
+
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    if (context.Request.Cookies.TryGetValue(cookieName, out var token))
+                    {
+                        context.Token = token;
+                    }
+
+                    if (string.IsNullOrEmpty(context.Token))
+                    {
+                        context.Token = context.Request.Query[cookieName];
+                    }
+
+                    return Task.CompletedTask;
+                },
+            };
+        }
+    );
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
@@ -159,14 +165,16 @@ SeedDatabase();
 
 app.UseCors(myAllowSpecificOrigins);
 
-app.UseCookiePolicy(new CookiePolicyOptions
-{
-    MinimumSameSitePolicy = builder.Environment.IsProduction() ?
-        SameSiteMode.Lax
-        : SameSiteMode.None,
-    HttpOnly = HttpOnlyPolicy.Always,
-    Secure = CookieSecurePolicy.Always
-});
+app.UseCookiePolicy(
+    new CookiePolicyOptions
+    {
+        MinimumSameSitePolicy = builder.Environment.IsProduction()
+            ? SameSiteMode.Lax
+            : SameSiteMode.None,
+        HttpOnly = HttpOnlyPolicy.Always,
+        Secure = CookieSecurePolicy.Always,
+    }
+);
 app.UseRouting();
 
 app.UseAuthentication();
